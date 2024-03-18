@@ -2,11 +2,13 @@ package com.example.shoppinglist
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
@@ -21,6 +23,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 
@@ -32,10 +35,10 @@ fun ShoppingListApp() {
     var sItems by remember { mutableStateOf(listOf<ShoppingItem>()) }
     var showDialog by remember {mutableStateOf(false) }
     var itemName by remember {mutableStateOf("")}
-    var itemQuantity by remember { mutableIntStateOf(0) }
-
-
+    var itemQuantity by remember { mutableIntStateOf(1) }
+    println("hello")
     Column (
+
         Modifier.fillMaxSize(),
         Arrangement.Center
     ){
@@ -43,7 +46,7 @@ fun ShoppingListApp() {
             onClick = {showDialog=true},
             modifier = Modifier
                 .align(Alignment.CenterHorizontally)
-                .padding(10.dp),
+                .padding(12.dp),
 
         ) {
             Text(text = "Add Item")
@@ -62,7 +65,36 @@ fun ShoppingListApp() {
     if(showDialog){
         AlertDialog(
             onDismissRequest = { showDialog=false },
-            confirmButton = { /*TODO*/ },
+            confirmButton = {
+                          Row (
+                              modifier = Modifier.fillMaxWidth(),
+                              horizontalArrangement = Arrangement.SpaceBetween,
+                              ){
+                              Button(
+                                  onClick = {
+                                      if (itemName.isNotBlank() && itemQuantity >= 1){
+                                          val newItem = ShoppingItem(
+                                              sItems.size+1,
+                                              itemName,
+                                              itemQuantity
+                                          )
+                                          //resetting the values
+                                          itemName=""
+                                          itemQuantity=1
+                                          showDialog = false
+                                          println("Item has been added \n$itemName with quantity of $itemQuantity")
+                                      }
+                                  }
+                              ) {
+                                  Text(text = "Add")
+                              }
+                              Button(
+                                  onClick = {showDialog = false}
+                              ) {
+                                  Text(text = "Cancel")
+                              }
+                          }
+            },
             title = { Text(text = "Add Shopping Item")},
             text = {
                 Column {
@@ -77,12 +109,13 @@ fun ShoppingListApp() {
                         )
                     OutlinedTextField(
                         label = { Text(text = "Item Quantity")},
-                        value = itemName,
+                        value = itemQuantity.toString(),
                         onValueChange = {itemQuantity=it.toInt()},
                         singleLine = true,
                         modifier = Modifier
                             .fillMaxWidth()
                             .padding(16.dp),
+                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number)
                     )
                 }
             }
