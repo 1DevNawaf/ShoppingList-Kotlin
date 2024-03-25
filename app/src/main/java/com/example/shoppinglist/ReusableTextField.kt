@@ -54,7 +54,7 @@ fun ReusableTextField() {
                 if (ListFinder.codeInList(it)){
                     iconState.value=Icons.Default.Check
                     colorState.value = Color.Green
-                    validText.value="referral code i    s correct"
+                    validText.value="referral code is correct"
                 }
                 else{
                     iconState.value=Icons.Default.Warning
