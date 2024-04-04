@@ -1,7 +1,11 @@
 package com.example.shoppinglist
 
+import android.Manifest
 import android.content.Context
 import android.location.Address
+import android.widget.Toast
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -37,6 +41,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
+import androidx.core.app.ActivityCompat
 import androidx.navigation.NavController
 
 
@@ -60,6 +65,47 @@ fun ShoppingListApp(
     var showDialog by remember { mutableStateOf(false) }
     var itemName  by remember { mutableStateOf("")}
     var itemQuantity  by remember { mutableStateOf("")}
+
+
+    val requestPermissionLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.RequestMultiplePermissions(),
+        onResult = {
+                permissions ->
+            if (permissions[Manifest.permission.ACCESS_FINE_LOCATION]==true
+                && permissions[Manifest.permission.ACCESS_COARSE_LOCATION]==true){
+                //we have the access
+                locationUtils.requestLocationUpdates(viewModel)
+            }else{
+                //Ask for location
+                //this is why we need the location
+                val rationaleRequired = ActivityCompat.shouldShowRequestPermissionRationale(
+                    context as MainActivity,
+                    Manifest.permission.ACCESS_FINE_LOCATION
+                )
+                        || ActivityCompat.shouldShowRequestPermissionRationale(
+                    context as MainActivity,
+                    Manifest.permission.ACCESS_FINE_LOCATION
+                )
+
+                //this will display why we need it
+                if (rationaleRequired){
+                    Toast.makeText(
+                        context,
+                        "Location is required for this feature",
+                        Toast.LENGTH_LONG
+                    ).show()
+                }else{
+                    //this when the user is denies the access then he need to go to the phone settings
+                    Toast.makeText(
+                        context,
+                        "Location is required for this feature, enable it in the phone settings",
+                        Toast.LENGTH_LONG).show()
+                }
+
+            }
+        }
+    )
+
 
     Column(
         modifier= Modifier.fillMaxSize(),
