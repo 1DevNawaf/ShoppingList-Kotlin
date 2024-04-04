@@ -7,10 +7,11 @@ import retrofit2.create
 object RetrofitClient {
     private const val BASE_URL = "https://maps.googleapis.com/"
 
-    fun create():GeocodingFromCoordinates{
-        val retrofit = Retrofit.Builder().baseUrl(BASE_URL)
+    fun create(): GeocodingApiService{
+        val retrofit = Retrofit.Builder()
+            .baseUrl(BASE_URL)
             .addConverterFactory(GsonConverterFactory.create())
             .build()
-        return retrofit.create(GeocodingFromCoordinates::class.java)
+        return  retrofit.create(GeocodingApiService::class.java)
     }
 }

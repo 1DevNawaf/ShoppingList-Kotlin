@@ -45,12 +45,11 @@ import androidx.core.app.ActivityCompat
 import androidx.navigation.NavController
 
 
-data class ShoppingItem(
-    val id:Int,
-    var name: String,
-    var quantity:Int,
-    var isEditing: Boolean = false,
-    var address: String = ""
+data class ShoppingItem(val id:Int,
+                        var name: String,
+                        var quantity:Int,
+                        var isEditing: Boolean = false,
+                        var address: String = ""
 )
 
 @Composable
@@ -66,45 +65,35 @@ fun ShoppingListApp(
     var itemName  by remember { mutableStateOf("")}
     var itemQuantity  by remember { mutableStateOf("")}
 
-
     val requestPermissionLauncher = rememberLauncherForActivityResult(
-        contract = ActivityResultContracts.RequestMultiplePermissions(),
-        onResult = {
-                permissions ->
-            if (permissions[Manifest.permission.ACCESS_FINE_LOCATION]==true
-                && permissions[Manifest.permission.ACCESS_COARSE_LOCATION]==true){
-                //we have the access
-                locationUtils.requestLocationUpdates(viewModel)
+        contract = ActivityResultContracts.RequestMultiplePermissions() ,
+        onResult = { permissions ->
+            if(permissions[Manifest.permission.ACCESS_COARSE_LOCATION] == true
+                && permissions[Manifest.permission.ACCESS_FINE_LOCATION] == true){
+                // I HAVE ACCESS to location
+
+                locationUtils.requestLocationUpdates(viewModel = viewModel)
             }else{
-                //Ask for location
-                //this is why we need the location
                 val rationaleRequired = ActivityCompat.shouldShowRequestPermissionRationale(
                     context as MainActivity,
                     Manifest.permission.ACCESS_FINE_LOCATION
-                )
-                        || ActivityCompat.shouldShowRequestPermissionRationale(
+                ) || ActivityCompat.shouldShowRequestPermissionRationale(
                     context as MainActivity,
-                    Manifest.permission.ACCESS_FINE_LOCATION
+                    Manifest.permission.ACCESS_COARSE_LOCATION
                 )
 
-                //this will display why we need it
-                if (rationaleRequired){
-                    Toast.makeText(
-                        context,
-                        "Location is required for this feature",
-                        Toast.LENGTH_LONG
-                    ).show()
+                if(rationaleRequired){
+                    Toast.makeText(context,
+                        "Location Permission is required for this feature to work", Toast.LENGTH_LONG)
+                        .show()
                 }else{
-                    //this when the user is denies the access then he need to go to the phone settings
-                    Toast.makeText(
-                        context,
-                        "Location is required for this feature, enable it in the phone settings",
-                        Toast.LENGTH_LONG).show()
+                    Toast.makeText(context,
+                        "Location Permission is required. Please enable it in the Android Settings",
+                        Toast.LENGTH_LONG)
+                        .show()
                 }
-
             }
-        }
-    )
+        })
 
 
     Column(
@@ -117,34 +106,32 @@ fun ShoppingListApp(
         ){
             Text("Add Item")
         }
-        Spacer(modifier = Modifier.height(16.dp))
-
-
-
         LazyColumn(
             modifier= Modifier
                 .fillMaxSize()
                 .padding(16.dp)
         ){
             items(sItems){
-                item ->
-                if (item.isEditing){
-                    ShoppingItemEditor(item =item, onEditComplete = {
-                        editedName,editedQuantity ->
-                        sItems = sItems.map { it.copy(isEditing = false)}
-                        val editedItem = sItems.find { it.id == item.id }
+                    item ->
+                if(item.isEditing){
+                    ShoppingItemEditor(item = item, onEditComplete = {
+                            editedName, editedQuantity ->
+                        sItems = sItems.map{ it.copy(isEditing = false)}
+                        val editedItem = sItems.find{ it.id == item.id}
                         editedItem?.let {
                             it.name = editedName
                             it.quantity = editedQuantity
+                            it.address = address
                         }
                     })
                 }else{
-                    ShoppingListItem(item = item,
+                    ShoppingListItem(item = item ,
                         onEditClick = {
-                            //finding out which item that are being changed
-                            sItems = sItems.map { it.copy(isEditing = it.id==item.id) }
-                        }, onDeleteClick = {
-                            sItems=sItems-item
+                            // finding out which item we are editing and changing is "isEditing boolean" to true
+                            sItems = sItems.map{it.copy(isEditing = it.id==item.id )}
+                        },
+                        onDeleteClick = {
+                            sItems = sItems-item
                         })
                 }
             }
@@ -163,7 +150,8 @@ fun ShoppingListApp(
                             val newItem = ShoppingItem(
                                 id= sItems.size+1,
                                 name = itemName,
-                                quantity = itemQuantity.toInt()
+                                quantity = itemQuantity.toInt(),
+                                address = address
                             )
                             sItems = sItems + newItem
                             showDialog = false
@@ -199,9 +187,9 @@ fun ShoppingListApp(
                             .padding(8.dp)
                     )
                     Button(onClick = {
-                        if (locationUtils.hasLocationPermission(context)){
+                        if(locationUtils.hasLocationPermission(context)){
                             locationUtils.requestLocationUpdates(viewModel)
-                            navController.navigate("locationScreen"){
+                            navController.navigate("locationscreen"){
                                 this.launchSingleTop
                             }
                         }else{
@@ -210,8 +198,8 @@ fun ShoppingListApp(
                                 Manifest.permission.ACCESS_COARSE_LOCATION
                             ))
                         }
-                    }) {
-                        Text(text = "Address")
+                    }){
+                        Text("address")
                     }
                 }
             }
@@ -236,8 +224,7 @@ fun ShoppingItemEditor(item: ShoppingItem, onEditComplete: (String, Int) -> Unit
     )
     {
         Column {
-            OutlinedTextField(
-                label = { Text(text = "Item name")},
+            BasicTextField(
                 value= editedName,
                 onValueChange = {editedName = it},
                 singleLine = true,
@@ -245,8 +232,7 @@ fun ShoppingItemEditor(item: ShoppingItem, onEditComplete: (String, Int) -> Unit
                     .wrapContentSize()
                     .padding(8.dp)
             )
-            OutlinedTextField(
-                label = { Text(text = "Quantity")},
+            BasicTextField(
                 value= editedQuantity,
                 onValueChange = {editedQuantity = it},
                 singleLine = true,
@@ -283,20 +269,20 @@ fun ShoppingListItem(
             .border(
                 border = BorderStroke(2.dp, Color(0XFF018786)),
                 shape = RoundedCornerShape(20)
-            )
+            ),
+        horizontalArrangement =  Arrangement.SpaceBetween
     ){
-        Column (modifier = Modifier
-            .weight(1f)
-            .padding(8.dp)){
-            Row {
+        Column(modifier = Modifier.weight(1f).padding(8.dp)) {
+            Row{
                 Text(text = item.name, modifier = Modifier.padding(8.dp))
                 Text(text = "Qty: ${item.quantity}", modifier = Modifier.padding(8.dp))
             }
+            Row(modifier= Modifier.fillMaxWidth()){
+                Icon(imageVector = Icons.Default.LocationOn, contentDescription = null)
+                Text(text = item.address)
+            }
         }
-        Row(modifier = Modifier.fillMaxSize()) {
-            Icon(imageVector = Icons.Default.LocationOn, contentDescription = null)
-            Text(text = item.address)
-        }
+
         Row(modifier = Modifier.padding(8.dp)){
             IconButton(onClick = onEditClick){
                 Icon(imageVector = Icons.Default.Edit, contentDescription = null)
