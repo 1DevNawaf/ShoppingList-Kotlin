@@ -198,6 +198,21 @@ fun ShoppingListApp(
                             .fillMaxWidth()
                             .padding(8.dp)
                     )
+                    Button(onClick = {
+                        if (locationUtils.hasLocationPermission(context)){
+                            locationUtils.requestLocationUpdates(viewModel)
+                            navController.navigate("locationScreen"){
+                                this.launchSingleTop
+                            }
+                        }else{
+                            requestPermissionLauncher.launch(arrayOf(
+                                Manifest.permission.ACCESS_FINE_LOCATION,
+                                Manifest.permission.ACCESS_COARSE_LOCATION
+                            ))
+                        }
+                    }) {
+                        Text(text = "Address")
+                    }
                 }
             }
         )
